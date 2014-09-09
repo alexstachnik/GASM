@@ -28,13 +28,49 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.asmButton = new System.Windows.Forms.Button();
+            this.saveExeButton = new System.Windows.Forms.Button();
+            this.quitButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
+            // 
+            // asmButton
+            // 
+            this.asmButton.Location = new System.Drawing.Point(12, 12);
+            this.asmButton.Name = "asmButton";
+            this.asmButton.Size = new System.Drawing.Size(113, 23);
+            this.asmButton.TabIndex = 0;
+            this.asmButton.Text = "Assemble File";
+            this.asmButton.UseVisualStyleBackColor = true;
+            this.asmButton.Click += new System.EventHandler(this.asmButton_Click);
+            // 
+            // saveExeButton
+            // 
+            this.saveExeButton.Location = new System.Drawing.Point(131, 12);
+            this.saveExeButton.Name = "saveExeButton";
+            this.saveExeButton.Size = new System.Drawing.Size(113, 23);
+            this.saveExeButton.TabIndex = 2;
+            this.saveExeButton.Text = "Save Executable";
+            this.saveExeButton.UseVisualStyleBackColor = true;
+            this.saveExeButton.Click += new System.EventHandler(this.saveExeButton_Click);
+            // 
+            // quitButton
+            // 
+            this.quitButton.Location = new System.Drawing.Point(251, 11);
+            this.quitButton.Name = "quitButton";
+            this.quitButton.Size = new System.Drawing.Size(42, 40);
+            this.quitButton.TabIndex = 3;
+            this.quitButton.Text = "Quit";
+            this.quitButton.UseVisualStyleBackColor = true;
+            this.quitButton.Click += new System.EventHandler(this.quitButton_Click);
             // 
             // Main_Window
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(284, 262);
+            this.ClientSize = new System.Drawing.Size(305, 262);
+            this.Controls.Add(this.quitButton);
+            this.Controls.Add(this.saveExeButton);
+            this.Controls.Add(this.asmButton);
             this.Name = "Main_Window";
             this.Text = "GASM";
             this.ResumeLayout(false);
@@ -42,6 +78,10 @@
         }
 
         #endregion
+
+        private System.Windows.Forms.Button asmButton;
+        private System.Windows.Forms.Button saveExeButton;
+        private System.Windows.Forms.Button quitButton;
 
     }
 }
