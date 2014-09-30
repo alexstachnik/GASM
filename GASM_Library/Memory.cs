@@ -10,21 +10,21 @@ using System.Threading.Tasks;
 
 namespace GASM_Library
 {
+    public class MemoryException : Exception
+    {
+        private uint addr;
+
+        public MemoryException() { }
+        public MemoryException(string msg) : base(msg) { }
+        public MemoryException(string msg, Exception inner) : base(msg, inner) { }
+        public MemoryException(string msg, uint addr)
+        {
+            this.addr = addr;
+        }
+    }
+
     public class Memory
     {
-
-        public class MemoryException : Exception
-        {
-            private uint addr;
-
-            public MemoryException() { }
-            public MemoryException(string msg) : base(msg) { }
-            public MemoryException(string msg, Exception inner) : base(msg, inner) { }
-            public MemoryException(string msg, uint addr)
-            {
-                this.addr = addr;
-            }
-        }
         private UInt16[] arr;
 
         public Memory(int size)

@@ -15,6 +15,7 @@ namespace Gemini_Simulator
     public partial class Simulator : Form
     {
         private CPU cpu;
+        private Memory objFile;
 
         public Simulator()
         {
@@ -33,17 +34,40 @@ namespace Gemini_Simulator
             OpenFileDialog ofd = new OpenFileDialog();
             ofd.Filter = "GASM executable (*.o)|*.o|All files (*.*)|*.*";
             DialogResult clickedOk = ofd.ShowDialog();
-            if (clickedOk == System.Windows.Forms.DialogResult.OK)
+            try
             {
-                using (BinaryReader br =
-                    new BinaryReader(File.Open(ofd.FileName,FileMode.Open)))
+                if (clickedOk == System.Windows.Forms.DialogResult.OK)
                 {
-                    Memory code=ObjectFile.readBinary(br);
-                    cpu = new CPU(code);
+                    using (BinaryReader br =
+                        new BinaryReader(File.Open(ofd.FileName, FileMode.Open)))
+                    {
+                        objFile = ObjectFile.readBinary(br);
+                        cpu = new CPU(objFile);
+                    }
+                    updateRegisters();
                 }
-                updateRegisters();
             }
-
+            catch (ObjectFileReaderException ex)
+            {
+                MessageBox.Show(ex.Message,
+                    "Error reading object file",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            catch (InvalidOpcodeException ex)
+            {
+                MessageBox.Show(ex.Message,
+                    "Error reading object file",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message,
+                    "Unknown Exception",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         private void quitButton_Click(object sender, EventArgs e)
@@ -53,6 +77,8 @@ namespace Gemini_Simulator
 
         private void stepButton_Click(object sender, EventArgs e)
         {
+
+            
             cpu.step();
             updateRegisters();
         }

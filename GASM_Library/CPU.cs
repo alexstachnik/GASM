@@ -30,6 +30,11 @@ namespace GASM_Library
             registers = new Registers();
         }
 
+        public void reset()
+        {
+            this.registers = new Registers();
+        }
+
         private void readToMDR()
         {
             UInt16 val=this.data.getAddr(this.registers.mar.val);
