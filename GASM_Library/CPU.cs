@@ -32,37 +32,18 @@ namespace GASM_Library
 
         private void readToMDR()
         {
-            UInt16 retVal = this.data.getAddr(this.registers.mar.val);
-            this.registers.mdr.setVal(retVal);
-        }
-
-        private void setFromMDR()
-        {
-            this.code.setAddr(this.registers.mar.val,(UInt16)this.registers.mdr.val);
+            UInt16 val=this.data.getAddr(this.registers.mar.val);
+            this.registers.mdr.setVal(val);
         }
 
         private void PCUpdate()
         {
-            if (this.registers.bubbleID) {
-                this.registers.IR.setVal(0);
-            }
-            if (this.registers.flush) {
-                this.registers.ACInput.setVal(BinInstr.makeNOOP());
-                this.registers.EXInput.setVal(BinInstr.makeNOOP());
-            }
-
             if (this.registers.branchACC) {
                 this.registers.PC.setVal(this.registers.acc.val);
-            } else if (this.registers.branchPredict) {
-                this.registers.PC.setVal((uint)this.registers.ACInput.val.val);
             } else {
                 this.registers.PC.setVal(this.registers.PC.val+1);
             }
-
-            this.registers.bubbleID = false;
-            this.registers.flush = false;
             this.registers.branchACC = false;
-            this.registers.branchPredict = false;
         }
 
         private void instructionFetch()
@@ -70,25 +51,10 @@ namespace GASM_Library
             this.registers.IR.setVal(this.code.getAddr(this.registers.PC.val));
         }
 
-        private bool branchPredict(BinInstr ins) {
-            if (ins.op == BinOpCode.BA ||
-                ins.op == BinOpCode.BE ||
-                ins.op == BinOpCode.BG ||
-                ins.op == BinOpCode.BL) {
-                return true;
-            } else {
-                return false;
-            }
-        }
-
         private void instructionDecode()
         {
             BinInstr ins = new BinInstr((UInt16)this.registers.IR.val);
             this.registers.ACInput.setVal(ins);
-            if (branchPredict(ins)) {
-                this.registers.bubbleID = true;
-                this.registers.branchPredict = true;
-            }
         }
 
         private void accessMemory()
@@ -109,7 +75,7 @@ namespace GASM_Library
                         goto case BinOpCode.LDA;
                     case BinOpCode.LDA:
                         this.registers.mar.setVal((uint)this.registers.ACInput.val.val);
-                        readToMDR();//FIXME
+                        readToMDR();
                         break;
                     default:
                         // Branch instruction
@@ -168,21 +134,18 @@ namespace GASM_Library
                 case BinOpCode.BE:
                     if (this.registers.CC.val != 0)
                     {
-                        this.registers.flush = true;
                         this.registers.branchACC = true;
                     }
                     break;
                 case BinOpCode.BG:
                     if (this.registers.CC.val <= 0)
                     {
-                        this.registers.flush = true;
                         this.registers.branchACC = true;
                     }
                     break;
                 case BinOpCode.BL:
                     if (this.registers.CC.val >= 0)
                     {
-                        this.registers.flush = true;
                         this.registers.branchACC = true;
                     }
                     break;
@@ -215,6 +178,7 @@ namespace GASM_Library
                     updateCC(result);
                     break;
                 case BinOpCode.STA:
+                    this.registers.WBInput.setVal(this.registers.EXInput.val);
                     break;
                 case BinOpCode.SUB:
                     result = this.registers.a - this.registers.b;
@@ -228,22 +192,32 @@ namespace GASM_Library
         {
             if (this.registers.WBInput.val.op == BinOpCode.STA)
             {
-
+                this.data.setAddr( (uint)this.registers.WBInput.val.val,
+                                   (UInt16)this.registers.acc.val);
             }
         }
 
+
+        // I have a sneaking suspicion that setting things up this
+        // way will be helpful later
         public void step()
         {
             instructionFetch();
-            instructionDecode();
-            accessMemory();
-            executeInstruction();
-            writeBack();
+            registers.signalEdge();
 
+            instructionDecode();
+            registers.signalEdge();
+
+            accessMemory();
+            registers.signalEdge();
+
+            executeInstruction();
+            registers.signalEdge();
+
+            writeBack();
             registers.signalEdge();
 
             PCUpdate();
-
             registers.signalEdge();
         }
     }

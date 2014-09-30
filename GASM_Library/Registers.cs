@@ -1,4 +1,8 @@
-﻿using System;
+﻿/**
+ * Alexander Stachnik
+ */
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +12,8 @@ namespace GASM_Library
 {
     public class Registers
     {
+
+        // Just planning ahead:
         public class Latch<T>
         {
             public T val { get; private set; }
@@ -40,16 +46,11 @@ namespace GASM_Library
         public Latch<uint> acc = new Latch<uint>(0);
         public Latch<uint> mar = new Latch<uint>(0);
         public Latch<uint> mdr = new Latch<uint>(0);
-        public Latch<bool> storing = new Latch<bool>(false);
 
         public uint a = 0;
         public uint b = 0;
 
         public bool halt { get; set; }
-        public bool flush { get; set; }
-        public bool bubbleID {get; set;}
-        public bool retry { get; set; }
-        public bool branchPredict { get; set; }
         public bool branchACC { get; set; }
 
         public Latch<BinInstr> ACInput;
@@ -61,9 +62,6 @@ namespace GASM_Library
 
         public Registers() {
             halt = false;
-            flush = false;
-            bubbleID = false;
-            branchPredict = false;
             branchACC = false;
 
             ACInput = new Latch<BinInstr>(BinInstr.makeNOOP());
@@ -79,8 +77,6 @@ namespace GASM_Library
             acc.updateVal();
             mar.updateVal();
             mdr.updateVal();
-
-            storing.updateVal();
 
             ACInput.updateVal();
             EXInput.updateVal();

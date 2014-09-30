@@ -40,6 +40,10 @@ namespace GASM
                     this.asmFile = P.parse();
                     this.fileLoaded = true;
                 }
+                using (StreamReader sr = new StreamReader(ofd.FileName))
+                {
+                    this.fileContents.Text=sr.ReadToEnd();
+                }
             }
         }
 
