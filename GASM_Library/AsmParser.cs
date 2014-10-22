@@ -73,7 +73,7 @@ namespace GASM_Library
 
         public static Regex LINE_REGEX = new Regex(@"\s*(?<body>[^!]*)\s*(?:!(?<comment>.*))?");
         public static Regex LABEL_REGEX = new Regex(@"(?<label>[^:]*)(?<!\s)\s*:");
-        public static Regex INSTR_REGEX = new Regex(@"(?<instr>[a-zA-Z]*)\s+(?:(?<flag>\#\$|\$)(?<numeric>[0-9]+)|(?<label>.*))");
+        public static Regex INSTR_REGEX = new Regex(@"(?<instr>[a-zA-Z]*)(?:(?:\s+(?<flag>\#\$|\$)(?<numeric>[0-9]+)|\s*(?<label>.*)))\s*$");
 
         private AsmOpCode parseOpcode(string str)
         {
@@ -102,6 +102,10 @@ namespace GASM_Library
                 try
                 {
                     val = new InstrVal(Int32.Parse(instrMatch.Groups["numeric"].Value));
+                    if (val.getVal() > 255)
+                    {
+                        throw new OverflowException();
+                    }
                 }
                 catch (FormatException)
                 {
@@ -115,7 +119,19 @@ namespace GASM_Library
             }
             else
             {
-                val = new InstrVal(instrMatch.Groups["label"].Value);
+                if (OpCodeMap.expectLabel(op))
+                {
+                    val = new InstrVal(instrMatch.Groups["label"].Value.Trim());
+                }
+                else
+                {
+                    if (instrMatch.Groups["label"].Value != "")
+                    {
+                        throw new ParserException("Unexpected garbage after instruction");
+                    }
+                    val = new InstrVal(0);
+                }
+                
             }
             return new Instr
             {
@@ -159,13 +175,20 @@ namespace GASM_Library
                         loc = loc
                     });
                 } else {
-                    Instr instr = parseInstr(body);
-                    instr.comments = comments;
-                    instr.loc = loc;
-                    instrs.Add(instr);
-                    labels.Add(curLabels);
-                    curLabels = new List<Label>();
-                    comments = "";
+                    try
+                    {
+                        Instr instr = parseInstr(body);
+                        instr.comments = comments;
+                        instr.loc = loc;
+                        instrs.Add(instr);
+                        labels.Add(curLabels);
+                        curLabels = new List<Label>();
+                        comments = "";
+                    }
+                    catch (ParserException ex)
+                    {
+                        throw new ParserException(ex.Message, loc);
+                    }
                 }
                 ++lineNum;
             }
@@ -194,12 +217,20 @@ namespace GASM_Library
                 }
                 catch (KeyNotFoundException)
                 {
-                    throw new ParserException("Label not found");
+                    throw new ParserException("Label not found: "+label);
                 }
             };
             for (int i = 0; i < instrs.Count; ++i)
             {
-                instrs[i].val.update(labelLookup);
+                try
+                {
+                    instrs[i].val.update(labelLookup);
+                }
+                catch(ParserException ex)
+                {
+                    throw new ParserException(ex.Message, instrs[i].loc);
+                }
+                
             }
 
             return new Source { instrs = instrs };

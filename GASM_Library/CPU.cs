@@ -13,20 +13,22 @@ namespace GASM_Library
 {
     public class CPU
     {
-        private Memory code;
-        private Memory data=new Memory(256);
+        public CacheIF code;
+        public CacheIF data;
 
         public Registers registers { get; private set; }
 
         public CPU()
         {
             this.code = new Memory(1);
+            this.data = new Memory(256);
             registers = new Registers();
         }
 
-        public CPU(Memory code)
+        public CPU(CacheIF code,CacheIF data)
         {
             this.code = code;
+            this.data = data;
             registers = new Registers();
         }
 
@@ -35,20 +37,18 @@ namespace GASM_Library
             this.registers = new Registers();
         }
 
-        private void readToMDR()
+        private void readToMDR(uint addr)
         {
-            UInt16 val=this.data.getAddr(this.registers.mar.val);
+            UInt16 val=this.data.getAddr(addr);
             this.registers.mdr.setVal(val);
         }
 
         private void PCUpdate()
         {
-            if (this.registers.branchACC) {
-                this.registers.PC.setVal(this.registers.acc.val);
-            } else {
+            if (!this.registers.willBranch) {
                 this.registers.PC.setVal(this.registers.PC.val+1);
             }
-            this.registers.branchACC = false;
+            this.registers.willBranch = false;
         }
 
         private void instructionFetch()
@@ -80,7 +80,7 @@ namespace GASM_Library
                         goto case BinOpCode.LDA;
                     case BinOpCode.LDA:
                         this.registers.mar.setVal((uint)this.registers.ACInput.val.val);
-                        readToMDR();
+                        readToMDR((uint)this.registers.ACInput.val.val);
                         break;
                     default:
                         // Branch instruction
@@ -135,23 +135,28 @@ namespace GASM_Library
                     updateCC(result);
                     break;
                 case BinOpCode.BA:
+                    this.registers.willBranch = true;
+                    this.registers.PC.setVal(this.registers.b);
                     break;
                 case BinOpCode.BE:
-                    if (this.registers.CC.val != 0)
+                    if (this.registers.CC.val == 0)
                     {
-                        this.registers.branchACC = true;
+                        this.registers.willBranch = true;
+                        this.registers.PC.setVal(this.registers.b);
                     }
                     break;
                 case BinOpCode.BG:
-                    if (this.registers.CC.val <= 0)
+                    if (this.registers.CC.val ==  1)
                     {
-                        this.registers.branchACC = true;
+                        this.registers.willBranch = true;
+                        this.registers.PC.setVal(this.registers.b);
                     }
                     break;
                 case BinOpCode.BL:
-                    if (this.registers.CC.val >= 0)
+                    if (this.registers.CC.val == 0xFFFFFFFF)
                     {
-                        this.registers.branchACC = true;
+                        this.registers.willBranch = true;
+                        this.registers.PC.setVal(this.registers.b);
                     }
                     break;
                 case BinOpCode.DIV:
@@ -183,7 +188,6 @@ namespace GASM_Library
                     updateCC(result);
                     break;
                 case BinOpCode.STA:
-                    this.registers.WBInput.setVal(this.registers.EXInput.val);
                     break;
                 case BinOpCode.SUB:
                     result = this.registers.a - this.registers.b;
@@ -191,6 +195,7 @@ namespace GASM_Library
                     updateCC(result);
                     break;
             }
+            this.registers.WBInput.setVal(this.registers.EXInput.val);
         }
 
         private void writeBack()
@@ -207,6 +212,11 @@ namespace GASM_Library
         // way will be helpful later
         public void step()
         {
+            if (this.registers.halt)
+            {
+                return;
+            }
+
             instructionFetch();
             registers.signalEdge();
 
@@ -224,6 +234,11 @@ namespace GASM_Library
 
             PCUpdate();
             registers.signalEdge();
+
+            if (this.registers.PC.val >= this.code.size())
+            {
+                this.registers.halt = true;
+            }
         }
     }
 }

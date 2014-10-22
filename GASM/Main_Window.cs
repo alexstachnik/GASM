@@ -1,4 +1,8 @@
-﻿using System;
+﻿/**
+ * Alexander Stachnik
+ */
+
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -27,24 +31,36 @@ namespace GASM
         private void asmButton_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "GASM assembly (*.asm)|*.asm|All files (*.*)|*.*";
+            ofd.Filter = "GASM assembly (*.s)|*.s|All files (*.*)|*.*";
             DialogResult clickedOk = ofd.ShowDialog();
+
             if (clickedOk == System.Windows.Forms.DialogResult.OK)
             {
                 using (StreamReader sr = new StreamReader(ofd.FileName))
                 {
-                    AsmParser P = new AsmParser(
-                        sr,
-                        new TranslationUnit { fileName = ofd.FileName },
-                        DefaultParserOptions.options);
-                    this.asmFile = P.parse();
-                    this.fileLoaded = true;
+                    this.fileContents.Text = sr.ReadToEnd();
                 }
-                using (StreamReader sr = new StreamReader(ofd.FileName))
+                try
                 {
-                    this.fileContents.Text=sr.ReadToEnd();
+                    using (StreamReader sr = new StreamReader(ofd.FileName))
+                    {
+                        AsmParser P = new AsmParser(
+                            sr,
+                            new TranslationUnit { fileName = ofd.FileName },
+                            DefaultParserOptions.options);
+                        this.asmFile = P.parse();
+                        this.fileLoaded = true;
+                    }
+                }
+                catch (ParserException ex)
+                {
+                    MessageBox.Show(ex.Message + "\nAt line: " + ex.loc.lineNum,
+                        "Error parsing source file",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
                 }
             }
+
         }
 
         private void saveExeButton_Click(object sender, EventArgs e)

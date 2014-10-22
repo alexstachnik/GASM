@@ -72,6 +72,21 @@ namespace GASM_Library
         public bool notImm { get; set; }
         public BinOpCode op { get; set; }
 
+        public string prettyPrint()
+        {
+            string immStr;
+            if (notImm)
+            {
+                immStr = "$";
+            }
+            else
+            {
+                immStr = "#$";
+            }
+
+            return op.ToString() + " " + immStr + val.ToString();
+        }
+
         public BinInstr(Instr asmIns)
         {
             this.val = asmIns.val.getVal();

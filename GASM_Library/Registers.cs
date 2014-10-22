@@ -51,7 +51,7 @@ namespace GASM_Library
         public uint b = 0;
 
         public bool halt { get; set; }
-        public bool branchACC { get; set; }
+        public bool willBranch { get; set; }
 
         public Latch<BinInstr> ACInput;
         public Latch<BinInstr> EXInput;
@@ -62,7 +62,7 @@ namespace GASM_Library
 
         public Registers() {
             halt = false;
-            branchACC = false;
+            willBranch = false;
 
             ACInput = new Latch<BinInstr>(BinInstr.makeNOOP());
             EXInput = new Latch<BinInstr>(BinInstr.makeNOOP());

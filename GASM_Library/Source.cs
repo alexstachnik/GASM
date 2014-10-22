@@ -67,10 +67,10 @@ namespace GASM_Library
             {AsmOpCode.OR,new OpCodeProps {str="or",expectLabel=false}},
             {AsmOpCode.SHL,new OpCodeProps {str="shl",expectLabel=false}},
             {AsmOpCode.NOTA,new OpCodeProps {str="nota",expectLabel=false}},
-            {AsmOpCode.BA,new OpCodeProps {str="ba",expectLabel=false}},
-            {AsmOpCode.BE,new OpCodeProps {str="be",expectLabel=false}},
-            {AsmOpCode.BL,new OpCodeProps {str="bl",expectLabel=false}},
-            {AsmOpCode.BG,new OpCodeProps {str="bg",expectLabel=false}},
+            {AsmOpCode.BA,new OpCodeProps {str="ba",expectLabel=true}},
+            {AsmOpCode.BE,new OpCodeProps {str="be",expectLabel=true}},
+            {AsmOpCode.BL,new OpCodeProps {str="bl",expectLabel=true}},
+            {AsmOpCode.BG,new OpCodeProps {str="bg",expectLabel=true}},
             {AsmOpCode.NOP,new OpCodeProps {str="nop",expectLabel=false}},
             {AsmOpCode.HLT,new OpCodeProps {str="hlt",expectLabel=false}}
         };
