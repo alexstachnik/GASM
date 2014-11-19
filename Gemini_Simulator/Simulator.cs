@@ -20,6 +20,7 @@ namespace Gemini_Simulator
     {
         private CPU cpu;
         private Memory objFile;
+        private string objFileName = "";
 
         public Simulator()
         {
@@ -114,42 +115,37 @@ namespace Gemini_Simulator
             cacheHitsCount = 0;
         }
 
-        private void loadObj_Click(object sender, EventArgs e)
+        private bool loadObjectFile(String fileName)
         {
-            OpenFileDialog ofd = new OpenFileDialog();
-            ofd.Filter = "GASM executable (*.o)|*.o|All files (*.*)|*.*";
-            DialogResult clickedOk = ofd.ShowDialog();
             try
             {
-                if (clickedOk == System.Windows.Forms.DialogResult.OK)
+                using (BinaryReader br =
+                    new BinaryReader(File.Open(fileName, FileMode.Open)))
                 {
-                    using (BinaryReader br =
-                        new BinaryReader(File.Open(ofd.FileName, FileMode.Open)))
-                    {
-                        objFile = ObjectFile.readBinary(br);
+                    objFile = ObjectFile.readBinary(br);
 
-                        if (noCacheButton.Checked)
-                        {
-                            cpu = new CPU(objFile, new Memory(256));
-                        }
-                        else if (directMapButton.Checked)
-                        {
-                            uint blockSize = UInt32.Parse(blockSizeBox.Text);
-                            uint cacheSize = UInt32.Parse(cacheSizeBox.Text);
-                            cpu = new CPU(objFile, new DirectMapCache(256,blockSize,cacheSize));
-                        }
-                        else if (twoWayAssocButton.Checked)
-                        {
-                            uint blockSize = UInt32.Parse(blockSizeBox.Text);
-                            uint cacheSize = UInt32.Parse(cacheSizeBox.Text);
-                            cpu = new CPU(objFile, new TwoWayCache(256, blockSize, cacheSize));
-                        }
-                        
-                        initMemoryGrid();
-                        initCacheDisplay();
+                    if (noCacheButton.Checked)
+                    {
+                        cpu = new CPU(objFile, new Memory(256));
                     }
-                    updateRegisters();
+                    else if (directMapButton.Checked)
+                    {
+                        uint blockSize = UInt32.Parse(blockSizeBox.Text);
+                        uint cacheSize = UInt32.Parse(cacheSizeBox.Text);
+                        cpu = new CPU(objFile, new DirectMapCache(256, blockSize, cacheSize));
+                    }
+                    else if (twoWayAssocButton.Checked)
+                    {
+                        uint blockSize = UInt32.Parse(blockSizeBox.Text);
+                        uint cacheSize = UInt32.Parse(cacheSizeBox.Text);
+                        cpu = new CPU(objFile, new TwoWayCache(256, blockSize, cacheSize));
+                    }
+
+                    initMemoryGrid();
+                    initCacheDisplay();
                 }
+                updateRegisters();
+                return true;
             }
             catch (ObjectFileReaderException ex)
             {
@@ -171,6 +167,21 @@ namespace Gemini_Simulator
                     "Unknown Exception",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
+            }
+            return false;
+        }
+
+        private void loadObj_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog ofd = new OpenFileDialog();
+            ofd.Filter = "GASM executable (*.o)|*.o|All files (*.*)|*.*";
+            DialogResult clickedOk = ofd.ShowDialog();
+            if (clickedOk == System.Windows.Forms.DialogResult.OK)
+            {
+                if (loadObjectFile(ofd.FileName))
+                {
+                    this.objFileName = ofd.FileName;
+                }
             }
         }
 
@@ -256,6 +267,14 @@ namespace Gemini_Simulator
             catch (OverflowException)
             {
                 cacheSizeBox.Text = "2";
+            }
+        }
+
+        private void reloadButton_Click(object sender, EventArgs e)
+        {
+            if (this.objFileName != "")
+            {
+                loadObjectFile(this.objFileName);
             }
         }
     }

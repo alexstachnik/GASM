@@ -76,6 +76,7 @@
             this.label14 = new System.Windows.Forms.Label();
             this.cacheHitsLabel = new System.Windows.Forms.Label();
             this.cacheMissesLabel = new System.Windows.Forms.Label();
+            this.reloadButton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MemoryGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.CodeGrid)).BeginInit();
@@ -570,11 +571,22 @@
             this.cacheMissesLabel.TabIndex = 13;
             this.cacheMissesLabel.Text = "0";
             // 
+            // reloadButton
+            // 
+            this.reloadButton.Location = new System.Drawing.Point(94, 11);
+            this.reloadButton.Name = "reloadButton";
+            this.reloadButton.Size = new System.Drawing.Size(75, 23);
+            this.reloadButton.TabIndex = 14;
+            this.reloadButton.Text = "Reload";
+            this.reloadButton.UseVisualStyleBackColor = true;
+            this.reloadButton.Click += new System.EventHandler(this.reloadButton_Click);
+            // 
             // Simulator
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(676, 307);
+            this.Controls.Add(this.reloadButton);
             this.Controls.Add(this.cacheMissesLabel);
             this.Controls.Add(this.cacheHitsLabel);
             this.Controls.Add(this.label14);
@@ -652,6 +664,7 @@
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label cacheHitsLabel;
         private System.Windows.Forms.Label cacheMissesLabel;
+        private System.Windows.Forms.Button reloadButton;
     }
 }
 
