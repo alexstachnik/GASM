@@ -77,6 +77,14 @@
             this.cacheHitsLabel = new System.Windows.Forms.Label();
             this.cacheMissesLabel = new System.Windows.Forms.Label();
             this.reloadButton = new System.Windows.Forms.Button();
+            this.label16 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
+            this.label20 = new System.Windows.Forms.Label();
+            this.label21 = new System.Windows.Forms.Label();
+            this.IFStageLabel = new System.Windows.Forms.Label();
+            this.IDStageLabel = new System.Windows.Forms.Label();
+            this.EXStageLabel = new System.Windows.Forms.Label();
+            this.WBStageLabel = new System.Windows.Forms.Label();
             this.groupBox1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.MemoryGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.CodeGrid)).BeginInit();
@@ -324,7 +332,7 @@
             // 
             // quitButton
             // 
-            this.quitButton.Location = new System.Drawing.Point(621, 12);
+            this.quitButton.Location = new System.Drawing.Point(699, 12);
             this.quitButton.Name = "quitButton";
             this.quitButton.Size = new System.Drawing.Size(43, 40);
             this.quitButton.TabIndex = 2;
@@ -520,7 +528,7 @@
             // label10
             // 
             this.label10.AutoSize = true;
-            this.label10.Location = new System.Drawing.Point(514, 74);
+            this.label10.Location = new System.Drawing.Point(592, 214);
             this.label10.Name = "label10";
             this.label10.Size = new System.Drawing.Size(74, 13);
             this.label10.TabIndex = 8;
@@ -529,7 +537,7 @@
             // cacheStatusLabel
             // 
             this.cacheStatusLabel.AutoSize = true;
-            this.cacheStatusLabel.Location = new System.Drawing.Point(595, 74);
+            this.cacheStatusLabel.Location = new System.Drawing.Point(673, 214);
             this.cacheStatusLabel.Name = "cacheStatusLabel";
             this.cacheStatusLabel.Size = new System.Drawing.Size(27, 13);
             this.cacheStatusLabel.TabIndex = 9;
@@ -538,7 +546,7 @@
             // label12
             // 
             this.label12.AutoSize = true;
-            this.label12.Location = new System.Drawing.Point(524, 93);
+            this.label12.Location = new System.Drawing.Point(602, 233);
             this.label12.Name = "label12";
             this.label12.Size = new System.Drawing.Size(62, 13);
             this.label12.TabIndex = 10;
@@ -547,7 +555,7 @@
             // label14
             // 
             this.label14.AutoSize = true;
-            this.label14.Location = new System.Drawing.Point(510, 111);
+            this.label14.Location = new System.Drawing.Point(588, 251);
             this.label14.Name = "label14";
             this.label14.Size = new System.Drawing.Size(76, 13);
             this.label14.TabIndex = 11;
@@ -556,7 +564,7 @@
             // cacheHitsLabel
             // 
             this.cacheHitsLabel.AutoSize = true;
-            this.cacheHitsLabel.Location = new System.Drawing.Point(598, 91);
+            this.cacheHitsLabel.Location = new System.Drawing.Point(676, 231);
             this.cacheHitsLabel.Name = "cacheHitsLabel";
             this.cacheHitsLabel.Size = new System.Drawing.Size(13, 13);
             this.cacheHitsLabel.TabIndex = 12;
@@ -565,7 +573,7 @@
             // cacheMissesLabel
             // 
             this.cacheMissesLabel.AutoSize = true;
-            this.cacheMissesLabel.Location = new System.Drawing.Point(598, 111);
+            this.cacheMissesLabel.Location = new System.Drawing.Point(676, 251);
             this.cacheMissesLabel.Name = "cacheMissesLabel";
             this.cacheMissesLabel.Size = new System.Drawing.Size(13, 13);
             this.cacheMissesLabel.TabIndex = 13;
@@ -581,11 +589,91 @@
             this.reloadButton.UseVisualStyleBackColor = true;
             this.reloadButton.Click += new System.EventHandler(this.reloadButton_Click);
             // 
+            // label16
+            // 
+            this.label16.AutoSize = true;
+            this.label16.Location = new System.Drawing.Point(513, 66);
+            this.label16.Name = "label16";
+            this.label16.Size = new System.Drawing.Size(50, 13);
+            this.label16.TabIndex = 15;
+            this.label16.Text = "IF Stage:";
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(513, 83);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(52, 13);
+            this.label18.TabIndex = 16;
+            this.label18.Text = "ID Stage:";
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(513, 100);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(55, 13);
+            this.label20.TabIndex = 17;
+            this.label20.Text = "EX Stage:";
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(513, 117);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(59, 13);
+            this.label21.TabIndex = 18;
+            this.label21.Text = "WB Stage:";
+            // 
+            // IFStageLabel
+            // 
+            this.IFStageLabel.AutoSize = true;
+            this.IFStageLabel.Location = new System.Drawing.Point(588, 66);
+            this.IFStageLabel.Name = "IFStageLabel";
+            this.IFStageLabel.Size = new System.Drawing.Size(30, 13);
+            this.IFStageLabel.TabIndex = 19;
+            this.IFStageLabel.Text = "NOP";
+            // 
+            // IDStageLabel
+            // 
+            this.IDStageLabel.AutoSize = true;
+            this.IDStageLabel.Location = new System.Drawing.Point(588, 83);
+            this.IDStageLabel.Name = "IDStageLabel";
+            this.IDStageLabel.Size = new System.Drawing.Size(30, 13);
+            this.IDStageLabel.TabIndex = 20;
+            this.IDStageLabel.Text = "NOP";
+            // 
+            // EXStageLabel
+            // 
+            this.EXStageLabel.AutoSize = true;
+            this.EXStageLabel.Location = new System.Drawing.Point(588, 100);
+            this.EXStageLabel.Name = "EXStageLabel";
+            this.EXStageLabel.Size = new System.Drawing.Size(30, 13);
+            this.EXStageLabel.TabIndex = 21;
+            this.EXStageLabel.Text = "NOP";
+            // 
+            // WBStageLabel
+            // 
+            this.WBStageLabel.AutoSize = true;
+            this.WBStageLabel.Location = new System.Drawing.Point(588, 117);
+            this.WBStageLabel.Name = "WBStageLabel";
+            this.WBStageLabel.Size = new System.Drawing.Size(30, 13);
+            this.WBStageLabel.TabIndex = 22;
+            this.WBStageLabel.Text = "NOP";
+            // 
             // Simulator
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(676, 307);
+            this.ClientSize = new System.Drawing.Size(754, 307);
+            this.Controls.Add(this.WBStageLabel);
+            this.Controls.Add(this.EXStageLabel);
+            this.Controls.Add(this.IDStageLabel);
+            this.Controls.Add(this.IFStageLabel);
+            this.Controls.Add(this.label21);
+            this.Controls.Add(this.label20);
+            this.Controls.Add(this.label18);
+            this.Controls.Add(this.label16);
             this.Controls.Add(this.reloadButton);
             this.Controls.Add(this.cacheMissesLabel);
             this.Controls.Add(this.cacheHitsLabel);
@@ -665,6 +753,14 @@
         private System.Windows.Forms.Label cacheHitsLabel;
         private System.Windows.Forms.Label cacheMissesLabel;
         private System.Windows.Forms.Button reloadButton;
+        private System.Windows.Forms.Label label16;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.Label IFStageLabel;
+        private System.Windows.Forms.Label IDStageLabel;
+        private System.Windows.Forms.Label EXStageLabel;
+        private System.Windows.Forms.Label WBStageLabel;
     }
 }
 

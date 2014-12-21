@@ -15,201 +15,152 @@ namespace GASM_Library
     {
         public CacheIF code;
         public CacheIF data;
-
+        private BranchPredict branchTable;
         public Registers registers { get; private set; }
+
+        public delegate void CPUCycleFinishedHandler(object sender, EventArgs args);
+
+        public event CPUCycleFinishedHandler onFinishedCycle;
+
+        private InstructionFetch IFStage;
+        private InstructionDecode IDStage;
+        private ExecuteInstruction EXStage;
+        private WriteBack WBStage;
+
+        private Thread PCUpdateThread;
+
+        private AutoResetEvent readyToStep = new AutoResetEvent(true);
+
+        private void setUpThreads()
+        {
+            IFStage = new InstructionFetch(registers, branchTable, code);
+            IDStage = new InstructionDecode(registers);
+            EXStage = new ExecuteInstruction(registers, data);
+            WBStage = new WriteBack(registers, data);
+            PCUpdateThread = new Thread(new ThreadStart(PCUpdateLoop));
+
+            IFStage.run();
+            IDStage.run();
+            EXStage.run();
+            WBStage.run();
+            PCUpdateThread.Start();
+        }
 
         public CPU()
         {
             this.code = new Memory(1);
             this.data = new Memory(256);
             registers = new Registers();
+            branchTable = new BranchPredict(1, 1);
+
+            setUpThreads();
         }
 
-        public CPU(CacheIF code,CacheIF data)
+        public CPU(CacheIF code, CPUOptions options)
         {
             this.code = code;
-            this.data = data;
+            this.data = options.dataMemory;
             registers = new Registers();
+            branchTable = new BranchPredict(options.initTblState, code.size());
+
+            setUpThreads();
         }
 
-        public void reset()
+        public void tearDown()
         {
-            this.registers = new Registers();
+            this.registers.halt = true;
+            IFStage.signal.Set();
+            IFStage.thread.Join();
+            IDStage.signal.Set();
+            IDStage.thread.Join();
+            EXStage.signal.Set();
+            EXStage.thread.Join();
+            WBStage.signal.Set();
+            WBStage.thread.Join();
+
+            PCUpdateThread.Join();
         }
 
-        private void readToMDR(uint addr)
+        private uint predictLocation()
         {
-            UInt16 val=this.data.getAddr(addr);
-            this.registers.mdr.setVal(val);
+            return branchTable.getBranchDest(this.registers.PC.val);
         }
 
         private void PCUpdate()
         {
-            if (!this.registers.willBranch) {
+            if (this.registers.tookBranch)
+            {
+                this.branchTable.tookBranch(this.registers.WBInput.val.addr,
+                        (uint)this.registers.WBInput.val.val);
+            }
+            if (this.registers.skippedBranch)
+            {
+                this.branchTable.skippedBranch(this.registers.WBInput.val.addr);
+            }
+
+            if (this.registers.mispredicted)
+            {
+                if (this.registers.tookBranch)
+                {
+                    this.registers.PC.setVal((uint)this.registers.WBInput.val.val);
+                }
+                else
+                {
+                    this.registers.PC.setVal((uint)this.registers.WBInput.val.addr + 1);
+                }
+                this.registers.IFStallCount.setVal(2);
+                this.registers.EXLongInstruction.setVal(1);
+                this.registers.flushID();
+                this.registers.flushWB();
+            }
+            else if (this.registers.probablyBranch)
+            {
+                this.registers.PC.setVal(predictLocation());
+            }
+            else
+            {
                 this.registers.PC.setVal(this.registers.PC.val+1);
             }
-            this.registers.willBranch = false;
+
+            this.registers.mispredicted = false;
+            this.registers.probablyBranch = false;
+            this.registers.tookBranch = false;
+            this.registers.skippedBranch = false;
         }
 
-        private void instructionFetch()
+        private void PCUpdateLoop()
         {
-            this.registers.IR.setVal(this.code.getAddr(this.registers.PC.val));
-        }
-
-        private void instructionDecode()
-        {
-            BinInstr ins = new BinInstr((UInt16)this.registers.IR.val);
-            this.registers.ACInput.setVal(ins);
-        }
-
-        private void accessMemory()
-        {
-            if (this.registers.ACInput.val.notImm) {
-                switch(this.registers.ACInput.val.op) {
-                    case BinOpCode.ADD:
-                        goto case BinOpCode.LDA;
-                    case BinOpCode.SUB:
-                        goto case BinOpCode.LDA;
-                    case BinOpCode.MUL:
-                        goto case BinOpCode.LDA;
-                    case BinOpCode.DIV:
-                        goto case BinOpCode.LDA;
-                    case BinOpCode.AND:
-                        goto case BinOpCode.LDA;
-                    case BinOpCode.OR:
-                        goto case BinOpCode.LDA;
-                    case BinOpCode.LDA:
-                        this.registers.mar.setVal((uint)this.registers.ACInput.val.val);
-                        readToMDR((uint)this.registers.ACInput.val.val);
-                        break;
-                    default:
-                        // Branch instruction
-                        break;
+            while (!this.registers.halt)
+            {
+                this.IFStage.stageDone.WaitOne();
+                this.IDStage.stageDone.WaitOne();
+                this.EXStage.stageDone.WaitOne();
+                this.WBStage.stageDone.WaitOne();
+                fallingEdge();
+                this.readyToStep.Set();
+                if (onFinishedCycle != null)
+                {
+                    onFinishedCycle(this, EventArgs.Empty);
                 }
             }
-            this.registers.EXInput.setVal(this.registers.ACInput.val);
         }
 
-        private void updateCC(uint acc)
+        private void risingEdge()
         {
-            if ((int)acc > 0)
-            {
-                this.registers.CC.setVal(1);
-            }
-            else if (acc == 0)
-            {
-                this.registers.CC.setVal(0);
-            }
-            else
-            {
-                this.registers.CC.setVal(0xFFFFFFFF);
-            }
+            IFStage.signal.Set();
+            IDStage.signal.Set();
+            EXStage.signal.Set();
+            WBStage.signal.Set();
+            registers.signalEdge();
         }
 
-        private void executeInstruction()
+        private void fallingEdge()
         {
-            if (this.registers.EXInput.val.notImm)
-            {
-                this.registers.b = this.registers.mdr.val;
-            }
-            else
-            {
-                this.registers.b = (uint)this.registers.EXInput.val.val;
-            }
-
-            this.registers.a = this.registers.acc.val;
-            uint result;
-            switch (this.registers.EXInput.val.op)
-            {
-                case BinOpCode.LDA:
-                    this.registers.a = Registers.zero;
-                    goto case BinOpCode.ADD;
-                case BinOpCode.ADD:
-                    result = this.registers.a + this.registers.b;
-                    this.registers.acc.setVal(result);
-                    updateCC(result);
-                    break;
-                case BinOpCode.AND:
-                    result = this.registers.a & this.registers.b;
-                    this.registers.acc.setVal(result);
-                    updateCC(result);
-                    break;
-                case BinOpCode.BA:
-                    this.registers.willBranch = true;
-                    this.registers.PC.setVal(this.registers.b);
-                    break;
-                case BinOpCode.BE:
-                    if (this.registers.CC.val == 0)
-                    {
-                        this.registers.willBranch = true;
-                        this.registers.PC.setVal(this.registers.b);
-                    }
-                    break;
-                case BinOpCode.BG:
-                    if (this.registers.CC.val ==  1)
-                    {
-                        this.registers.willBranch = true;
-                        this.registers.PC.setVal(this.registers.b);
-                    }
-                    break;
-                case BinOpCode.BL:
-                    if (this.registers.CC.val == 0xFFFFFFFF)
-                    {
-                        this.registers.willBranch = true;
-                        this.registers.PC.setVal(this.registers.b);
-                    }
-                    break;
-                case BinOpCode.DIV:
-                    result = (uint)((int)this.registers.a / (int)this.registers.b);
-                    this.registers.acc.setVal(result);
-                    updateCC(result);
-                    break;
-                case BinOpCode.HLT:
-                    this.registers.halt = true;
-                    break;
-                case BinOpCode.MUL:
-                    result = (uint)((int)this.registers.a * (int)this.registers.b);
-                    this.registers.acc.setVal(result);
-                    updateCC(result);
-                    break;
-                case BinOpCode.NOTA:
-                    result = ~this.registers.a;
-                    this.registers.acc.setVal(result);
-                    updateCC(result);
-                    break;
-                case BinOpCode.OR:
-                    result = this.registers.a | this.registers.b;
-                    this.registers.acc.setVal(result);
-                    updateCC(result);
-                    break;
-                case BinOpCode.SHL:
-                    result = this.registers.a << (int)this.registers.b;
-                    this.registers.acc.setVal(result);
-                    updateCC(result);
-                    break;
-                case BinOpCode.STA:
-                    break;
-                case BinOpCode.SUB:
-                    result = this.registers.a - this.registers.b;
-                    this.registers.acc.setVal(result);
-                    updateCC(result);
-                    break;
-            }
-            this.registers.WBInput.setVal(this.registers.EXInput.val);
+            PCUpdate();
+            registers.signalEdge();
+            registers.decrementStallCounts();
         }
 
-        private void writeBack()
-        {
-            if (this.registers.WBInput.val.op == BinOpCode.STA)
-            {
-                this.data.setAddr( (uint)this.registers.WBInput.val.val,
-                                   (UInt16)this.registers.acc.val);
-            }
-        }
-
-
-        // I have a sneaking suspicion that setting things up this
-        // way will be helpful later
         public void step()
         {
             if (this.registers.halt)
@@ -217,23 +168,9 @@ namespace GASM_Library
                 return;
             }
 
-            instructionFetch();
-            registers.signalEdge();
+            this.readyToStep.WaitOne();
 
-            instructionDecode();
-            registers.signalEdge();
-
-            accessMemory();
-            registers.signalEdge();
-
-            executeInstruction();
-            registers.signalEdge();
-
-            writeBack();
-            registers.signalEdge();
-
-            PCUpdate();
-            registers.signalEdge();
+            risingEdge();
 
             if (this.registers.PC.val >= this.code.size())
             {

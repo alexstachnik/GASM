@@ -39,6 +39,36 @@ namespace Gemini_Simulator
             IRRegText.Text = String.Format("0x{0,8:X8}", cpu.registers.IR.val);
             CCRegText.Text = String.Format("0x{0,8:X8}", cpu.registers.CC.val);
 
+            if (cpu.registers.IFStallCount.val > 0)
+            {
+                IFStageLabel.Text="NOP";
+            } else
+            {
+                IFStageLabel.Text = (new BinInstr(cpu.code.peek(cpu.registers.PC.val))).prettyPrint();
+            }
+            if (cpu.registers.IDStallCount.val > 0)
+            {
+                IDStageLabel.Text="NOP";
+            } else
+            {
+                IDStageLabel.Text=(new BinInstr((UInt16)cpu.registers.IR.val)).prettyPrint();
+            }
+            if(cpu.registers.EXStallCount.val>0)
+            {
+                EXStageLabel.Text="NOP";
+            } else
+            {
+                EXStageLabel.Text=cpu.registers.EXInput.val.prettyPrint();
+            }
+            if (cpu.registers.WBStallCount.val > 0)
+            {
+                WBStageLabel.Text="NOP";
+            } else
+            {
+                WBStageLabel.Text=cpu.registers.WBInput.val.prettyPrint();
+            }
+            
+
             for (int i = 0; i < cpu.data.size(); ++i)
             {
                 uint val = cpu.data.peek((uint)i);
@@ -60,6 +90,7 @@ namespace Gemini_Simulator
             CodeGrid.Focus();
             int scrollIx = (int)cpu.registers.PC.val - 1;
             scrollIx = (scrollIx < 0) ? 0 : scrollIx;
+            scrollIx = (scrollIx > CodeGrid.RowCount-1) ? CodeGrid.RowCount-1 : scrollIx;
             CodeGrid.FirstDisplayedScrollingRowIndex = scrollIx;
 
             cacheStatusLabel.Text = "";
@@ -123,28 +154,35 @@ namespace Gemini_Simulator
                     new BinaryReader(File.Open(fileName, FileMode.Open)))
                 {
                     objFile = ObjectFile.readBinary(br);
-
+                    CPUOptions cpuOptions = new CPUOptions();
+                    
                     if (noCacheButton.Checked)
                     {
-                        cpu = new CPU(objFile, new Memory(256));
+                        cpuOptions.dataMemory = new Memory(256);
                     }
                     else if (directMapButton.Checked)
                     {
                         uint blockSize = UInt32.Parse(blockSizeBox.Text);
                         uint cacheSize = UInt32.Parse(cacheSizeBox.Text);
-                        cpu = new CPU(objFile, new DirectMapCache(256, blockSize, cacheSize));
+                        cpuOptions.dataMemory = new DirectMapCache(256, blockSize, cacheSize);
                     }
                     else if (twoWayAssocButton.Checked)
                     {
                         uint blockSize = UInt32.Parse(blockSizeBox.Text);
                         uint cacheSize = UInt32.Parse(cacheSizeBox.Text);
-                        cpu = new CPU(objFile, new TwoWayCache(256, blockSize, cacheSize));
+                        cpuOptions.dataMemory = new TwoWayCache(256, blockSize, cacheSize);
                     }
+                    cpu.tearDown();
+                    cpu = new CPU(objFile, cpuOptions);
 
                     initMemoryGrid();
                     initCacheDisplay();
                 }
                 updateRegisters();
+                MethodInvoker handler = CPUCycleComplete;
+                cpu.onFinishedCycle += (sender, args) => stepButton.BeginInvoke(handler);
+                //cpu.onFinishedCycle += new CPU.CPUCycleFinishedHandler(CPUCycleComplete);
+
                 return true;
             }
             catch (ObjectFileReaderException ex)
@@ -171,6 +209,12 @@ namespace Gemini_Simulator
             return false;
         }
 
+        private void CPUCycleComplete()
+        {
+            updateRegisters();
+            stepButton.Enabled = true;
+        }
+
         private void loadObj_Click(object sender, EventArgs e)
         {
             OpenFileDialog ofd = new OpenFileDialog();
@@ -187,45 +231,22 @@ namespace Gemini_Simulator
 
         private void quitButton_Click(object sender, EventArgs e)
         {
+            cpu.tearDown();
             Application.Exit();
         }
 
         private void stepButton_Click(object sender, EventArgs e)
         {
-
-            try
-            {
-                cpu.step();
-            }
-            catch (MemoryException ex)
-            {
-                string msg = "Error while access memory at address " + ex.addr;
-                MessageBox.Show(msg,
-                    "Memory access error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-            }
-            updateRegisters();
+            cpu.step();
+            stepButton.Enabled = false;
         }
 
         private void runToEndButton_Click(object sender, EventArgs e)
         {
-            try
+            while (!cpu.registers.halt)
             {
-                while (!cpu.registers.halt)
-                {
-                    cpu.step();
-                    updateRegisters();
-                }
-                
-            }
-            catch (MemoryException ex)
-            {
-                string msg = "Error while access memory at address " + ex.addr;
-                MessageBox.Show(msg,
-                    "Memory access error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                cpu.step();
+                updateRegisters();
             }
         }
 

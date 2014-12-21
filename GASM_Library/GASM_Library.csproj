@@ -40,16 +40,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AsmParser.cs" />
+    <Compile Include="BranchPredict.cs" />
     <Compile Include="CacheIF.cs" />
     <Compile Include="CacheLine.cs" />
     <Compile Include="CPU.cs" />
+    <Compile Include="CPUOptions.cs" />
+    <Compile Include="CPUStage.cs" />
     <Compile Include="DirectMapCache.cs" />
+    <Compile Include="ExecuteInstruction.cs" />
+    <Compile Include="InstructionDecode.cs" />
+    <Compile Include="InstructionFetch.cs" />
     <Compile Include="Memory.cs" />
     <Compile Include="ObjectFile.cs" />
     <Compile Include="Registers.cs" />
     <Compile Include="Source.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TwoWayCache.cs" />
+    <Compile Include="WriteBack.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
